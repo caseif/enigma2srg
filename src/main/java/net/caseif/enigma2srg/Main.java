@@ -138,7 +138,7 @@ public class Main {
     }
 
     private static String classToSrg(ClassMapping cm) {
-        return "CL: " + cm.getObfuscatedName() + cm.getDeobfuscatedName();
+        return "CL: " + cm.getObfuscatedName() + " " + cm.getDeobfuscatedName();
     }
 
     private static String fieldToSrg(FieldMapping fm) {
