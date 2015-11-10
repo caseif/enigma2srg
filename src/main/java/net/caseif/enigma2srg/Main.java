@@ -130,7 +130,8 @@ public class Main {
             System.exit(1);
         }
 
-        classes.values().forEach(cm -> System.out.println(classToSrg(cm)));
+        classes.values().stream().filter(cm -> !cm.getObfuscatedName().equals(cm.getDeobfuscatedName()))
+                .forEach(cm -> System.out.println(classToSrg(cm)));
         classes.values().forEach(cm -> cm.getFieldMappings().values()
                 .forEach(fm -> System.out.println(fieldToSrg(fm))));
         classes.values().forEach(cm -> cm.getMethodMappings().values()
