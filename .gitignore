@@ -1,0 +1,12 @@
+.git/
+.gradle/
+.idea/
+bin/
+build/
+doc/
+target/
+.classpath
+.project
+.settings
+*.iml
+*.jardesc
