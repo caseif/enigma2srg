@@ -35,12 +35,18 @@ import net.caseif.enigma2srg.model.MethodMapping;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Main {
+
+    private static PrintWriter out;
+
+    private static File output;
 
     public static Map<String, ClassMapping> classes = new HashMap<>();
 
@@ -48,6 +54,10 @@ public class Main {
         if (args.length < 1) {
             System.err.println("Error: Expected input file as argument!");
             System.exit(1);
+        }
+
+        if (args.length == 2) {
+            output = new File(args[1]);
         }
 
         File file = new File(args[0]);
@@ -130,30 +140,43 @@ public class Main {
             System.exit(1);
         }
 
+        try (PrintWriter writer = output != null
+                ? new PrintWriter(new FileWriter(output))
+                : new PrintWriter(System.out)) {
+            out = writer;
+            writeMappings(writer);
+            out = null;
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            System.err.println("Failed to write to output file");
+            System.exit(1);
+        }
+    }
+
+    private static void writeMappings(PrintWriter out) {
         classes.values().stream().filter(cm -> !cm.getObfuscatedName().equals(cm.getDeobfuscatedName()))
-                .forEach(cm -> System.out.println(classToSrg(cm)));
-        classes.values().forEach(cm -> cm.getFieldMappings().values()
-                .forEach(fm -> System.out.println(fieldToSrg(fm))));
-        classes.values().forEach(cm -> cm.getMethodMappings().values()
-                .forEach(mm -> System.out.println(methodToSrg(mm))));
+                .forEach(Main::writeClassMapping);
+        classes.values().forEach(cm -> cm.getFieldMappings().values().forEach(Main::writeFieldMapping));
+        classes.values().forEach(cm -> cm.getMethodMappings().values().forEach(Main::writeMethodMapping));
     }
 
-    private static String classToSrg(ClassMapping cm) {
-        return "CL: " + cm.getObfuscatedName() + " " + cm.getDeobfuscatedName();
+    private static void writeClassMapping(ClassMapping cm) {
+        out.format("CL: %s %s", cm.getObfuscatedName(), cm.getDeobfuscatedName());
+        out.println();
     }
 
-    private static String fieldToSrg(FieldMapping fm) {
-        return "FD: "
-                + fm.getParent().getObfuscatedName() + "/" + fm.getObfuscatedName() + " "
-                + fm.getParent().getDeobfuscatedName() + "/" + fm.getDeobfuscatedName();
+    private static void writeFieldMapping(FieldMapping fm) {
+        out.format("FD: %s/%s %s/%s",
+                fm.getParent().getObfuscatedName(), fm.getObfuscatedName(),
+                fm.getParent().getDeobfuscatedName(), fm.getDeobfuscatedName());
+        out.println();
     }
 
-    private static String methodToSrg(MethodMapping mm) {
-        return "MD: "
-                + mm.getParent().getObfuscatedName() + "/" + mm.getObfuscatedName() + " "
-                + mm.getSignature() + " "
-                + mm.getParent().getDeobfuscatedName() + "/" + mm.getDeobfuscatedName() + " "
-                + mm.getDeobfuscatedSignature();
+    private static void writeMethodMapping(MethodMapping mm) {
+        out.format("MD: %s/%s %s %s/%s %s",
+                mm.getParent().getObfuscatedName(), mm.getObfuscatedName(), mm.getSignature(),
+                mm.getParent().getDeobfuscatedName(), mm.getDeobfuscatedName(), mm.getDeobfuscatedSignature());
+        out.println();
     }
 
 
